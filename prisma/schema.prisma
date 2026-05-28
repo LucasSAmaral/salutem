@@ -1,15 +1,202 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// ─── CLÍNICA (tenant) ───────────────────────────────────────────
+model Clinic {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique // ex: "clinica-dr-joao"
+  phone     String?
+  address   String?
+  createdAt DateTime @default(now())
+
+  users        User[]
+  doctors      Doctor[]
+  patients     Patient[]
+  appointments Appointment[]
+  queueItems   QueueItem[]
+}
+
+// ─── USUÁRIO (autenticação) ──────────────────────────────────────
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(ATTENDANT)
+  createdAt DateTime @default(now())
+
+  clinic   Clinic @relation(fields: [clinicId], references: [id])
+  clinicId Int
+
+  doctor Doctor?
+
+  accounts Account[]
+  sessions Session[]
+}
+
+enum Role {
+  ADMIN
+  DOCTOR
+  ATTENDANT
+}
+
+// ─── MÉDICO ──────────────────────────────────────────────────────
+model Doctor {
+  id             Int     @id @default(autoincrement())
+  crm            String
+  specialty      String?
+  consultDuration Int    @default(30) // minutos
+
+  user   User @relation(fields: [userId], references: [id])
+  userId Int  @unique
+
+  clinic   Clinic @relation(fields: [clinicId], references: [id])
+  clinicId Int
+
+  schedules    DoctorSchedule[]
+  appointments Appointment[]
+  absences     DoctorAbsence[]
+}
+
+// ─── AGENDA DO MÉDICO ────────────────────────────────────────────
+model DoctorSchedule {
+  id        Int      @id @default(autoincrement())
+  dayOfWeek Int      // 0=domingo, 1=segunda... 6=sábado
+  startTime String   // "08:00"
+  endTime   String   // "12:00"
+  breakStart String? // "10:00"
+  breakEnd   String? // "10:15"
+
+  doctor   Doctor @relation(fields: [doctorId], references: [id])
+  doctorId Int
+}
+
+// ─── AUSÊNCIAS DO MÉDICO ─────────────────────────────────────────
+model DoctorAbsence {
+  id        Int      @id @default(autoincrement())
+  startDate DateTime
+  endDate   DateTime
+  reason    String?
+
+  doctor   Doctor @relation(fields: [doctorId], references: [id])
+  doctorId Int
+}
+
+// ─── PACIENTE ────────────────────────────────────────────────────
+model Patient {
+  id          Int      @id @default(autoincrement())
+  name        String
+  cpf         String
+  birthDate   DateTime
+  phone       String?
+  email       String?
+  consent     Boolean  @default(false) // LGPD
+  createdAt   DateTime @default(now())
+
+  clinic   Clinic @relation(fields: [clinicId], references: [id])
+  clinicId Int
+
+  appointments Appointment[]
+  exams        Exam[]
+
+  @@unique([cpf, clinicId])
+}
+
+// ─── AGENDAMENTO ─────────────────────────────────────────────────
+model Appointment {
+  id        Int               @id @default(autoincrement())
+  date      DateTime
+  status    AppointmentStatus @default(SCHEDULED)
+  notes     String?
+  isWalkIn  Boolean           @default(false) // encaixe
+  createdAt DateTime          @default(now())
+
+  patient   Patient @relation(fields: [patientId], references: [id])
+  patientId Int
+
+  doctor   Doctor @relation(fields: [doctorId], references: [id])
+  doctorId Int
+
+  clinic   Clinic @relation(fields: [clinicId], references: [id])
+  clinicId Int
+
+  queueItem QueueItem?
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED  // chegada confirmada
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+// ─── FILA DE ATENDIMENTO ─────────────────────────────────────────
+model QueueItem {
+  id          Int      @id @default(autoincrement())
+  position    Int
+  arrivedAt   DateTime @default(now())
+  isLastOfDay Boolean  @default(false)
+
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  appointmentId Int         @unique
+
+  clinic   Clinic @relation(fields: [clinicId], references: [id])
+  clinicId Int
+}
+
+// ─── EXAMES ──────────────────────────────────────────────────────
+model Exam {
+  id          Int      @id @default(autoincrement())
+  name        String
+  fileUrl     String   // URL do arquivo no S3
+  fileType    String   // "pdf", "image"
+  uploadedAt  DateTime @default(now())
+
+  patient   Patient @relation(fields: [patientId], references: [id])
+  patientId Int
+}
+
+// ─── NEXTAUTH ────────────────────────────────────────────────────
+model Account {
+  id                String  @id @default(cuid())
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       Int
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
