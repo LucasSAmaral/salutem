@@ -63,8 +63,9 @@ Enums: Role (ADMIN, DOCTOR, ATTENDANT), AppointmentStatus (SCHEDULED, CONFIRMED,
 ## Multi-tenancy
 
 - Roteamento por clínica via slug (ex: clinica-dr-joao)
-- Cada clínica tem seu banco PostgreSQL isolado
-- clinicId presente em todas as queries
+- **Modelo atual: banco PostgreSQL único e compartilhado**, com `clinicId` em toda tabela pra isolar os dados por clínica. Escolhido pelo custo fixo baixo (não escala com número de clínicas), ideal pra validar o produto antes de gerar receita.
+- **Regra obrigatória de código**: toda query que acessa dado de clínica (Patient, Appointment, Doctor, etc.) DEVE filtrar por `clinicId`. Esquecer isso é um vazamento de dado entre clínicas, não só uma falha de isolamento — crítico dado que envolve prontuário médico (LGPD).
+- **Caminho de evolução futuro**: se o produto gerar receita que justifique, migrar para banco isolado por clínica é viável sem redesenhar o schema — como todo dado já é particionado por `clinicId`, a migração é um export por clínica (`WHERE clinicId = X`) para um banco novo, feito sob demanda, clínica a clínica. Não é uma decisão que precisa ser tomada agora.
 
 ## Conformidade LGPD
 
