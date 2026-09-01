@@ -3,7 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Box, Button, Paper, TextField, Typography, Alert } from "@mui/material";
+import {
+  Box,
+  Button,
+  Paper,
+  TextField,
+  Typography,
+  Alert,
+} from "@mui/material";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -51,7 +58,11 @@ export default function LoginPage() {
           Acesse sua conta
         </Typography>
 
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}
+        >
           {error && <Alert severity="error">{error}</Alert>}
 
           <TextField
@@ -70,7 +81,12 @@ export default function LoginPage() {
             required
             fullWidth
           />
-          <Button type="submit" variant="contained" size="large" disabled={loading}>
+          <Button
+            type="submit"
+            variant="contained"
+            size="large"
+            disabled={loading}
+          >
             {loading ? "Entrando..." : "Entrar"}
           </Button>
         </Box>
