@@ -17,7 +17,8 @@ SaaS multi-tenant para clínicas médicas particulares. Cada clínica tem sua pr
 
 ## Perfis de Usuário
 
-- **DOCTOR:** acessa prontuários, visualiza e gerencia fila em tempo real, configura própria agenda
+- **ADMIN:** secretária/gestão da clínica — gerencia a agenda dos médicos (turnos, horário de funcionamento) e pagamento/cobrança. **Não acessa prontuário do paciente** — histórico clínico é exclusivo do DOCTOR.
+- **DOCTOR:** acessa prontuários, visualiza e gerencia fila em tempo real, configura própria agenda (ADMIN também pode configurar em nome dele)
 - **ATTENDANT:** agenda consultas, confirma chegada de pacientes, gerencia fila
 - **PATIENT:** realiza autoagendamento online
 
