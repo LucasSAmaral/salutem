@@ -1,7 +1,8 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { authOptions } from "@/lib/auth";
-import { Box, Paper, Typography } from "@mui/material";
+import { Box, Paper, Typography, Button } from "@mui/material";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -19,6 +20,14 @@ export default async function DashboardPage() {
         <Typography>E-mail: {session.user.email}</Typography>
         <Typography>Perfil: {session.user.role}</Typography>
         <Typography>Clínica: {session.user.clinicSlug}</Typography>
+
+        {session.user.role === "DOCTOR" && (
+          <Link href="/dashboard/agenda" style={{ textDecoration: "none" }}>
+            <Button variant="outlined" sx={{ mt: 3 }}>
+              Minha Agenda
+            </Button>
+          </Link>
+        )}
       </Paper>
     </Box>
   );
