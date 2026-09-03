@@ -65,6 +65,8 @@ export default function ScheduleManager({
   const [form, setForm] = useState<FormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<DoctorSchedule | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   function openCreate() {
     setEditingId(null);
@@ -132,11 +134,15 @@ export default function ScheduleManager({
     setDialogOpen(false);
   }
 
-  async function handleDelete(id: number) {
-    if (!confirm("Remover este turno?")) return;
-    const res = await fetch(`/api/doctor/schedule/${id}`, { method: "DELETE" });
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const res = await fetch(`/api/doctor/schedule/${deleteTarget.id}`, { method: "DELETE" });
+    setDeleting(false);
+
     if (res.ok) {
-      setSchedules((prev) => prev.filter((s) => s.id !== id));
+      setSchedules((prev) => prev.filter((s) => s.id !== deleteTarget.id));
+      setDeleteTarget(null);
     }
   }
 
@@ -179,7 +185,7 @@ export default function ScheduleManager({
                       </IconButton>
                       <IconButton
                         size="small"
-                        onClick={() => handleDelete(s.id)}
+                        onClick={() => setDeleteTarget(s)}
                         aria-label="Remover turno"
                       >
                         <DeleteIcon fontSize="small" />
@@ -259,6 +265,24 @@ export default function ScheduleManager({
           <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
           <Button onClick={handleSave} variant="contained" disabled={saving}>
             {saving ? "Salvando..." : "Salvar"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} fullWidth maxWidth="xs">
+        <DialogTitle>Remover turno</DialogTitle>
+        <DialogContent>
+          {deleteTarget && (
+            <Typography variant="body2">
+              Remover o turno de {DAY_LABELS[deleteTarget.dayOfWeek]},{" "}
+              {deleteTarget.startTime} – {deleteTarget.endTime}?
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteTarget(null)}>Cancelar</Button>
+          <Button onClick={confirmDelete} variant="contained" color="error" disabled={deleting}>
+            {deleting ? "Removendo..." : "Remover"}
           </Button>
         </DialogActions>
       </Dialog>
