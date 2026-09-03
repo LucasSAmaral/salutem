@@ -1,16 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import type { Session } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getCurrentDoctor } from "@/lib/currentDoctor";
+import { canAccessDoctor } from "@/lib/currentDoctor";
 import { validateScheduleInput, hasOverlap } from "@/lib/scheduleValidation";
 
-async function loadOwnedSchedule(doctorId: number, idParam: string) {
+async function loadAuthorizedSchedule(session: Session, idParam: string) {
   const id = Number(idParam);
   if (!Number.isInteger(id)) return null;
 
-  const schedule = await prisma.doctorSchedule.findUnique({ where: { id } });
-  if (!schedule || schedule.doctorId !== doctorId) return null;
+  const schedule = await prisma.doctorSchedule.findUnique({
+    where: { id },
+    include: { doctor: true },
+  });
+  if (!schedule) return null;
+  if (!canAccessDoctor(session, schedule.doctor)) return null;
 
   return schedule;
 }
@@ -22,11 +27,8 @@ export async function PATCH(
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
-  const doctor = await getCurrentDoctor(session);
-  if (!doctor) return NextResponse.json({ error: "Usuário não é médico" }, { status: 403 });
-
   const { id } = await params;
-  const existing = await loadOwnedSchedule(doctor.id, id);
+  const existing = await loadAuthorizedSchedule(session, id);
   if (!existing) return NextResponse.json({ error: "Turno não encontrado" }, { status: 404 });
 
   const body = await req.json();
@@ -43,7 +45,7 @@ export async function PATCH(
     return NextResponse.json({ error: validationError }, { status: 400 });
   }
 
-  if (await hasOverlap(doctor.id, input, existing.id)) {
+  if (await hasOverlap(existing.doctorId, input, existing.id)) {
     return NextResponse.json(
       { error: "Este horário sobrepõe outro turno já cadastrado nesse dia" },
       { status: 409 }
@@ -71,11 +73,8 @@ export async function DELETE(
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
-  const doctor = await getCurrentDoctor(session);
-  if (!doctor) return NextResponse.json({ error: "Usuário não é médico" }, { status: 403 });
-
   const { id } = await params;
-  const existing = await loadOwnedSchedule(doctor.id, id);
+  const existing = await loadAuthorizedSchedule(session, id);
   if (!existing) return NextResponse.json({ error: "Turno não encontrado" }, { status: 404 });
 
   await prisma.doctorSchedule.delete({ where: { id: existing.id } });

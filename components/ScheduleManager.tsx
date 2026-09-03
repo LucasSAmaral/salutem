@@ -53,8 +53,11 @@ const emptyForm: FormState = {
 
 export default function ScheduleManager({
   initialSchedules,
+  doctorId,
 }: {
   initialSchedules: DoctorSchedule[];
+  /** Informado quando quem gerencia é o ADMIN editando a agenda de um médico específico. */
+  doctorId?: number;
 }) {
   const [schedules, setSchedules] = useState(initialSchedules);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -100,6 +103,7 @@ export default function ScheduleManager({
       endTime: form.endTime,
       breakStart: form.hasBreak ? form.breakStart : null,
       breakEnd: form.hasBreak ? form.breakEnd : null,
+      ...(doctorId ? { doctorId } : {}),
     };
 
     const url = editingId ? `/api/doctor/schedule/${editingId}` : "/api/doctor/schedule";
