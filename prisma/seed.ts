@@ -13,7 +13,7 @@ async function main() {
     },
   });
 
-  const passwordHash = await bcrypt.hash("admin123", 10);
+  const adminPasswordHash = await bcrypt.hash("admin123", 10);
 
   await prisma.user.upsert({
     where: { email: "admin@salutem.dev" },
@@ -21,13 +21,39 @@ async function main() {
     create: {
       name: "Admin Salutem",
       email: "admin@salutem.dev",
-      password: passwordHash,
+      password: adminPasswordHash,
       role: Role.ADMIN,
       clinicId: clinic.id,
     },
   });
 
+  const doctorPasswordHash = await bcrypt.hash("medico123", 10);
+
+  const doctorUser = await prisma.user.upsert({
+    where: { email: "medico@salutem.dev" },
+    update: {},
+    create: {
+      name: "Dra. Ana Souza",
+      email: "medico@salutem.dev",
+      password: doctorPasswordHash,
+      role: Role.DOCTOR,
+      clinicId: clinic.id,
+    },
+  });
+
+  await prisma.doctor.upsert({
+    where: { userId: doctorUser.id },
+    update: {},
+    create: {
+      userId: doctorUser.id,
+      clinicId: clinic.id,
+      crm: "12345-SP",
+      specialty: "Clínica Geral",
+    },
+  });
+
   console.log("Seed concluído: admin@salutem.dev / admin123");
+  console.log("Seed concluído: medico@salutem.dev / medico123");
 }
 
 main()
