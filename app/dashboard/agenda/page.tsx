@@ -4,8 +4,10 @@ import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { getCurrentDoctor } from "@/lib/currentDoctor";
 import { prisma } from "@/lib/prisma";
-import { Box, Typography, Chip, Stack } from "@mui/material";
+import { Box, Typography, Paper, Stack } from "@mui/material";
+import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
 import ScheduleManager from "@/components/ScheduleManager";
+import { getInitials } from "@/lib/initials";
 
 export default async function AgendaPage({
   searchParams,
@@ -78,17 +80,52 @@ export default async function AgendaPage({
             Nenhum médico cadastrado nesta clínica ainda.
           </Typography>
         ) : (
-          <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
+          <Stack spacing={1.25}>
             {doctors.map((d) => (
               <Link
                 key={d.id}
                 href={`/dashboard/agenda?doctorId=${d.id}`}
                 style={{ textDecoration: "none" }}
               >
-                <Chip
-                  label={d.specialty ? `${d.user.name} — ${d.specialty}` : d.user.name}
-                  clickable
-                />
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.75,
+                    p: 2,
+                    "&:hover": { borderColor: "primary.light" },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: "50%",
+                      bgcolor: "action.selected",
+                      color: "primary.dark",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 15,
+                      fontWeight: 600,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {getInitials(d.user.name)}
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {d.user.name}
+                    </Typography>
+                    {d.specialty && (
+                      <Typography variant="body2" color="text.secondary">
+                        {d.specialty}
+                      </Typography>
+                    )}
+                  </Box>
+                  <ChevronRightOutlinedIcon sx={{ ml: "auto", color: "text.disabled" }} />
+                </Paper>
               </Link>
             ))}
           </Stack>
