@@ -34,6 +34,7 @@ export default function Sidebar({ items, clinicSlug }: { items: NavItem[]; clini
         borderColor: "divider",
         display: "flex",
         flexDirection: "column",
+        overflowY: "auto",
         p: 1.5,
       }}
     >

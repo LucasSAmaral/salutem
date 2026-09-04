@@ -18,9 +18,9 @@ export default async function DashboardLayout({
   const items = getNavItems(session.user.role);
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh" }}>
+    <Box sx={{ display: "flex", height: "100vh" }}>
       <Sidebar items={items} clinicSlug={session.user.clinicSlug} />
-      <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <Box
           sx={{
             height: 64,
@@ -53,7 +53,7 @@ export default async function DashboardLayout({
           </Box>
           <LogoutButton />
         </Box>
-        <Box sx={{ flex: 1 }}>{children}</Box>
+        <Box sx={{ flex: 1, overflowY: "auto" }}>{children}</Box>
       </Box>
     </Box>
   );
