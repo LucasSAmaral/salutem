@@ -103,7 +103,9 @@ export default function ScheduleFormDialog({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle>{editing ? "Editar turno" : "Novo turno"}</DialogTitle>
-      <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
+      {/* "&&" força a especificidade: o MUI zera o padding-top do DialogContent
+       *  quando ele vem logo após um DialogTitle, e um sx normal perde pra essa regra. */}
+      <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, "&&": { pt: 2.5 } }}>
         {error && <Alert severity="error">{error}</Alert>}
         <TextField
           select
