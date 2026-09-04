@@ -18,9 +18,12 @@ export const shared: ThemeOptions = {
     MuiTableCell: { styleOverrides: { root: { paddingTop: 12, paddingBottom: 12 } } },
     MuiChip: { styleOverrides: { root: { fontWeight: 500 } } },
     // Foco sempre visível — regra de acessibilidade do sistema.
+    // Inputs ficam de fora: o MuiOutlinedInput/MuiFilledInput já tem indicador de foco
+    // próprio (borda colorida), então o anel genérico só duplicava e ficava pesado.
     MuiCssBaseline: {
       styleOverrides: {
         ':focus-visible': { outline: 'none', boxShadow: '0 0 0 3px currentColor' },
+        'input:focus-visible, textarea:focus-visible, select:focus-visible': { boxShadow: 'none' },
         '@media print': {
           '*': { boxShadow: 'none !important', background: 'transparent !important', color: '#000 !important' },
         },
