@@ -20,7 +20,7 @@ export function getNavItems(role: Role): NavItem[] {
     href: "/dashboard/agenda",
   });
 
-  items.push({ key: "patients", label: "Pacientes", href: null });
+  items.push({ key: "patients", label: "Pacientes", href: "/dashboard/patients" });
 
   if (role === "DOCTOR" || role === "ATTENDANT") {
     items.push({ key: "queue", label: "Fila de Atendimento", href: null });
