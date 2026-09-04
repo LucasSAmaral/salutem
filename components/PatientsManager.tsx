@@ -20,18 +20,21 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import CheckIcon from "@mui/icons-material/Check";
 import type { Patient } from "@prisma/client";
 import { getInitials } from "@/lib/initials";
 import { formatDateBR } from "@/lib/formatDate";
 import { onlyDigits } from "@/lib/cpf";
 import PatientFormDialog from "@/components/PatientFormDialog";
+import DeletePatientDialog from "@/components/DeletePatientDialog";
 
 export default function PatientsManager({ initialPatients }: { initialPatients: Patient[] }) {
   const [patients, setPatients] = useState(initialPatients);
   const [query, setQuery] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Patient | null>(null);
 
   function openCreate() {
     setEditingPatient(null);
@@ -50,6 +53,11 @@ export default function PatientsManager({ initialPatients }: { initialPatients: 
       )
     );
     setFormOpen(false);
+  }
+
+  function handleDeleted(id: number) {
+    setPatients((prev) => prev.filter((p) => p.id !== id));
+    setDeleteTarget(null);
   }
 
   const filtered = useMemo(() => {
@@ -165,6 +173,13 @@ export default function PatientsManager({ initialPatients }: { initialPatients: 
                     <IconButton size="small" onClick={() => openEdit(p)} aria-label="Editar paciente">
                       <EditOutlinedIcon fontSize="small" />
                     </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => setDeleteTarget(p)}
+                      aria-label="Excluir paciente"
+                    >
+                      <DeleteOutlinedIcon fontSize="small" />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))
@@ -179,6 +194,12 @@ export default function PatientsManager({ initialPatients }: { initialPatients: 
         editing={editingPatient}
         onClose={() => setFormOpen(false)}
         onSaved={handleSaved}
+      />
+
+      <DeletePatientDialog
+        target={deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onDeleted={handleDeleted}
       />
     </Box>
   );

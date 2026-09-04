@@ -67,3 +67,33 @@ export async function PATCH(
     throw err;
   }
 }
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  if (!ALLOWED_ROLES.includes(session.user.role)) {
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+  }
+
+  const { id: idParam } = await params;
+  const existing = await loadAuthorizedPatient(session.user.clinicId, idParam);
+  if (!existing) {
+    return NextResponse.json({ error: "Paciente não encontrado" }, { status: 404 });
+  }
+
+  try {
+    await prisma.patient.delete({ where: { id: existing.id } });
+    return new NextResponse(null, { status: 204 });
+  } catch (err: unknown) {
+    if (typeof err === "object" && err !== null && "code" in err && err.code === "P2003") {
+      return NextResponse.json(
+        { error: "Não é possível excluir: este paciente tem consultas ou exames vinculados" },
+        { status: 409 }
+      );
+    }
+    throw err;
+  }
+}
