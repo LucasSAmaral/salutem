@@ -4,6 +4,7 @@ import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { Box, Paper, Typography, Chip, Tooltip } from "@mui/material";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
+import EventAvailableOutlinedIcon from "@mui/icons-material/EventAvailableOutlined";
 import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import FormatListBulletedOutlinedIcon from "@mui/icons-material/FormatListBulletedOutlined";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
@@ -14,6 +15,10 @@ const CARD_META: Partial<Record<NavItemKey, { icon: React.ElementType; descripti
   agenda: {
     icon: CalendarMonthOutlinedIcon,
     description: "Configure os turnos e horários de atendimento.",
+  },
+  appointments: {
+    icon: EventAvailableOutlinedIcon,
+    description: "Marque consultas a partir dos horários livres do médico.",
   },
   patients: {
     icon: PeopleOutlinedIcon,

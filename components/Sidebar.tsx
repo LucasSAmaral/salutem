@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Box, Stack, Tooltip } from "@mui/material";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
+import EventAvailableOutlinedIcon from "@mui/icons-material/EventAvailableOutlined";
 import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import FormatListBulletedOutlinedIcon from "@mui/icons-material/FormatListBulletedOutlined";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
@@ -14,6 +15,7 @@ import type { NavItem, NavItemKey } from "@/lib/navItems";
 const ICONS: Record<NavItemKey, React.ElementType> = {
   dashboard: HomeOutlinedIcon,
   agenda: CalendarMonthOutlinedIcon,
+  appointments: EventAvailableOutlinedIcon,
   patients: PeopleOutlinedIcon,
   queue: FormatListBulletedOutlinedIcon,
   records: FolderOutlinedIcon,

@@ -1,6 +1,13 @@
 import type { Role } from "@prisma/client";
 
-export type NavItemKey = "dashboard" | "agenda" | "patients" | "queue" | "records" | "payment";
+export type NavItemKey =
+  | "dashboard"
+  | "agenda"
+  | "appointments"
+  | "patients"
+  | "queue"
+  | "records"
+  | "payment";
 
 export type NavItem = {
   key: NavItemKey;
@@ -14,11 +21,17 @@ export type NavItem = {
 export function getNavItems(role: Role): NavItem[] {
   const items: NavItem[] = [{ key: "dashboard", label: "Dashboard", href: "/dashboard" }];
 
-  items.push({
-    key: "agenda",
-    label: role === "ADMIN" ? "Agenda dos Médicos" : "Minha Agenda",
-    href: "/dashboard/agenda",
-  });
+  if (role === "ADMIN" || role === "DOCTOR") {
+    items.push({
+      key: "agenda",
+      label: role === "ADMIN" ? "Agenda dos Médicos" : "Minha Agenda",
+      href: "/dashboard/agenda",
+    });
+  }
+
+  if (role === "ADMIN" || role === "ATTENDANT") {
+    items.push({ key: "appointments", label: "Agendamento", href: "/dashboard/appointments" });
+  }
 
   items.push({ key: "patients", label: "Pacientes", href: "/dashboard/patients" });
 
