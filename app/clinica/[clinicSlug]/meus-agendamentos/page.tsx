@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { getPatientSession } from "@/lib/patientAuth";
+import { resolveIdentifiedPatient } from "@/lib/currentPatient";
 import PatientIdentifyForm from "@/components/PatientIdentifyForm/PatientIdentifyForm";
+import PatientConsentGate from "@/components/PatientConsentGate/PatientConsentGate";
 import MyAppointmentsList from "@/components/MyAppointmentsList/MyAppointmentsList";
 
 export default async function MeusAgendamentosPage({
@@ -9,14 +10,17 @@ export default async function MeusAgendamentosPage({
   params: Promise<{ clinicSlug: string }>;
 }) {
   const { clinicSlug } = await params;
-  const session = await getPatientSession();
+  const resolved = await resolveIdentifiedPatient(clinicSlug);
 
-  if (!session || session.clinicSlug !== clinicSlug) {
+  if (resolved.status === "unauthenticated") {
     return <PatientIdentifyForm clinicSlug={clinicSlug} />;
+  }
+  if (resolved.status === "needs-consent") {
+    return <PatientConsentGate />;
   }
 
   const appointments = await prisma.appointment.findMany({
-    where: { patientId: session.patientId, clinicId: session.clinicId },
+    where: { patientId: resolved.session.patientId, clinicId: resolved.session.clinicId },
     include: { doctor: { include: { user: true } } },
     orderBy: { date: "asc" },
   });
