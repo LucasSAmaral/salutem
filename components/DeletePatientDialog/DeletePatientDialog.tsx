@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
+import { Alert, Button, Dialog, DialogActions, DialogTitle, Typography } from "@mui/material";
 import type { Patient } from "@prisma/client";
+import { ConfirmDialogContent } from "./DeletePatientDialog.styles";
 
 export default function DeletePatientDialog({
   target,
@@ -37,14 +38,14 @@ export default function DeletePatientDialog({
   return (
     <Dialog open={!!target} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle>Excluir paciente</DialogTitle>
-      <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <ConfirmDialogContent>
         {error && <Alert severity="error">{error}</Alert>}
         {target && (
           <Typography variant="body2">
             Excluir o cadastro de {target.name}? Essa ação não pode ser desfeita.
           </Typography>
         )}
-      </DialogContent>
+      </ConfirmDialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancelar</Button>
         <Button onClick={confirmDelete} variant="contained" color="error" disabled={deleting}>

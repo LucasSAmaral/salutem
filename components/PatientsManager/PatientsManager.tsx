@@ -14,11 +14,9 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import SearchIcon from "@mui/icons-material/Search";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import CheckIcon from "@mui/icons-material/Check";
@@ -26,8 +24,16 @@ import type { Patient } from "@prisma/client";
 import { getInitials } from "@/lib/initials";
 import { formatDateBR } from "@/lib/formatDate";
 import { onlyDigits } from "@/lib/cpf";
-import PatientFormDialog from "@/components/PatientFormDialog";
-import DeletePatientDialog from "@/components/DeletePatientDialog";
+import PatientFormDialog from "@/components/PatientFormDialog/PatientFormDialog";
+import DeletePatientDialog from "@/components/DeletePatientDialog/DeletePatientDialog";
+import {
+  AvatarCircle,
+  EmptyStateText,
+  HeaderRow,
+  PatientNameCell,
+  SearchField,
+  SearchIconMuted,
+} from "./PatientsManager.styles";
 
 export default function PatientsManager({ initialPatients }: { initialPatients: Patient[] }) {
   const [patients, setPatients] = useState(initialPatients);
@@ -75,7 +81,7 @@ export default function PatientsManager({ initialPatients }: { initialPatients: 
 
   return (
     <Box>
-      <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", mb: 2.5 }}>
+      <HeaderRow>
         <Box>
           <Typography variant="h5" gutterBottom>
             Pacientes
@@ -87,18 +93,17 @@ export default function PatientsManager({ initialPatients }: { initialPatients: 
         <Button startIcon={<AddIcon />} onClick={openCreate} variant="contained">
           Novo Paciente
         </Button>
-      </Box>
+      </HeaderRow>
 
-      <TextField
+      <SearchField
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Buscar por nome, CPF ou data de nascimento"
-        sx={{ maxWidth: 380, mb: 2.5 }}
         slotProps={{
           input: {
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon fontSize="small" sx={{ color: "text.disabled" }} />
+                <SearchIconMuted fontSize="small" />
               </InputAdornment>
             ),
           },
@@ -121,37 +126,21 @@ export default function PatientsManager({ initialPatients }: { initialPatients: 
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6}>
-                  <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                  <EmptyStateText variant="body2" color="text.secondary">
                     {patients.length === 0
                       ? "Nenhum paciente cadastrado ainda."
                       : "Nenhum paciente encontrado para essa busca."}
-                  </Typography>
+                  </EmptyStateText>
                 </TableCell>
               </TableRow>
             ) : (
               filtered.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
-                      <Box
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: "50%",
-                          bgcolor: "action.selected",
-                          color: "text.secondary",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 12,
-                          fontWeight: 600,
-                          flexShrink: 0,
-                        }}
-                      >
-                        {getInitials(p.name)}
-                      </Box>
+                    <PatientNameCell>
+                      <AvatarCircle>{getInitials(p.name)}</AvatarCircle>
                       {p.name}
-                    </Box>
+                    </PatientNameCell>
                   </TableCell>
                   <TableCell>{p.cpf}</TableCell>
                   <TableCell>{formatDateBR(p.birthDate)}</TableCell>

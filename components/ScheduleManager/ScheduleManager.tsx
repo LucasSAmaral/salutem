@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Paper, Typography, Button, IconButton, Stack } from "@mui/material";
+import { Box, Typography, IconButton, Stack } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import type { DoctorSchedule } from "@prisma/client";
 import { DAY_LABELS } from "@/lib/dayLabels";
-import ScheduleFormDialog from "@/components/ScheduleFormDialog";
-import DeleteScheduleDialog from "@/components/DeleteScheduleDialog";
+import ScheduleFormDialog from "@/components/ScheduleFormDialog/ScheduleFormDialog";
+import DeleteScheduleDialog from "@/components/DeleteScheduleDialog/DeleteScheduleDialog";
+import { AddScheduleButton, DayCard, ScheduleRow } from "./ScheduleManager.styles";
 
 export default function ScheduleManager({
   initialSchedules,
@@ -61,7 +62,7 @@ export default function ScheduleManager({
     <Box>
       <Stack spacing={2}>
         {byDay.map(({ label, dayOfWeek, items }) => (
-          <Paper key={dayOfWeek} sx={{ p: 2 }} variant="outlined">
+          <DayCard key={dayOfWeek} variant="outlined">
             <Typography variant="subtitle1" gutterBottom>
               {label}
             </Typography>
@@ -72,14 +73,7 @@ export default function ScheduleManager({
             ) : (
               <Stack spacing={1}>
                 {items.map((s) => (
-                  <Box
-                    key={s.id}
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
+                  <ScheduleRow key={s.id}>
                     <Typography variant="body2">
                       {s.startTime} – {s.endTime}
                       {s.breakStart && s.breakEnd ? ` (pausa ${s.breakStart}–${s.breakEnd})` : ""}
@@ -96,17 +90,17 @@ export default function ScheduleManager({
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     </Box>
-                  </Box>
+                  </ScheduleRow>
                 ))}
               </Stack>
             )}
-          </Paper>
+          </DayCard>
         ))}
       </Stack>
 
-      <Button startIcon={<AddIcon />} onClick={openCreate} sx={{ mt: 3 }} variant="contained">
+      <AddScheduleButton startIcon={<AddIcon />} onClick={openCreate} variant="contained">
         Adicionar turno
-      </Button>
+      </AddScheduleButton>
 
       <ScheduleFormDialog
         key={formOpen ? (editingSchedule?.id ?? "new") : "closed"}

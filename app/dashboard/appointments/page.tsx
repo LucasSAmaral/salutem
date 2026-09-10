@@ -2,8 +2,8 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Box } from "@mui/material";
-import AppointmentBooking from "@/components/AppointmentBooking";
+import AppointmentBooking from "@/components/AppointmentBooking/AppointmentBooking";
+import { PageRoot } from "./page.styles";
 
 export default async function AppointmentsPage() {
   const session = await getServerSession(authOptions);
@@ -25,8 +25,8 @@ export default async function AppointmentsPage() {
   ]);
 
   return (
-    <Box sx={{ p: 4, maxWidth: 720 }}>
+    <PageRoot>
       <AppointmentBooking doctors={doctors} patients={patients} />
-    </Box>
+    </PageRoot>
   );
 }

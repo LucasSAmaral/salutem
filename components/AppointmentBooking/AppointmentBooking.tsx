@@ -3,18 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
-  Avatar,
   Box,
   Button,
   Chip,
   CircularProgress,
   InputAdornment,
-  Paper,
   Stack,
-  TextField,
   Typography,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
 import CheckIcon from "@mui/icons-material/Check";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -22,7 +18,38 @@ import type { Doctor, Patient, User } from "@prisma/client";
 import { getInitials } from "@/lib/initials";
 import { onlyDigits } from "@/lib/cpf";
 import { formatDateBR } from "@/lib/formatDate";
-import StatusChip from "@/components/StatusChip";
+import StatusChip from "@/components/StatusChip/StatusChip";
+import {
+  ChipAvatarSm,
+  DayCell,
+  DaysRow,
+  DividerLine,
+  DividerRow,
+  DoctorChipsRow,
+  DowLabel,
+  FooterBar,
+  GrowBox,
+  LoadingRow,
+  MediumText,
+  NoDoctorsText,
+  NoResultsText,
+  PatientAvatarLg,
+  PatientAvatarSm,
+  PatientSearchField,
+  Root,
+  SearchIconMuted,
+  SearchWrapper,
+  SelectedPatientCard,
+  SlotCell,
+  SlotsGrid,
+  SlotsWrapper,
+  SuggestionDivider,
+  SuggestionRow,
+  SuggestionsPaper,
+  WalkInConfirmRow,
+  WalkInRow,
+  WalkInTimeField,
+} from "./AppointmentBooking.styles";
 
 type DoctorWithUser = Doctor & { user: User };
 
@@ -172,7 +199,7 @@ export default function AppointmentBooking({
   }
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 3.5 }}>
+    <Root>
       <Box>
         <Typography variant="h5" gutterBottom>
           Novo Agendamento
@@ -190,88 +217,58 @@ export default function AppointmentBooking({
           Paciente
         </Typography>
         {selectedPatient ? (
-          <Paper
-            variant="outlined"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-              p: 1.5,
-              borderColor: "primary.main",
-              borderWidth: 1.5,
-            }}
-          >
-            <Avatar sx={{ width: 36, height: 36, fontSize: 13, bgcolor: "action.selected", color: "primary.dark" }}>
-              {getInitials(selectedPatient.name)}
-            </Avatar>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                {selectedPatient.name}
-              </Typography>
+          <SelectedPatientCard variant="outlined">
+            <PatientAvatarLg>{getInitials(selectedPatient.name)}</PatientAvatarLg>
+            <GrowBox>
+              <MediumText variant="body2">{selectedPatient.name}</MediumText>
               <Typography variant="caption" color="text.secondary">
                 CPF {selectedPatient.cpf} · nasc. {formatDateBR(selectedPatient.birthDate)}
               </Typography>
-            </Box>
+            </GrowBox>
             <Button size="small" onClick={() => setSelectedPatient(null)}>
               Trocar
             </Button>
-          </Paper>
+          </SelectedPatientCard>
         ) : (
-          <Box sx={{ position: "relative" }}>
-            <TextField
+          <SearchWrapper>
+            <PatientSearchField
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar paciente por nome ou CPF"
               fullWidth
-              sx={{ mt: 0.5 }}
               slotProps={{
                 input: {
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon fontSize="small" sx={{ color: "text.disabled" }} />
+                      <SearchIconMuted fontSize="small" />
                     </InputAdornment>
                   ),
                 },
               }}
             />
             {filteredPatients.length > 0 && (
-              <Paper variant="outlined" sx={{ mt: 0.5 }}>
-                <Stack divider={<Box sx={{ borderBottom: 1, borderColor: "divider" }} />}>
+              <SuggestionsPaper variant="outlined">
+                <Stack divider={<SuggestionDivider />}>
                   {filteredPatients.map((p) => (
-                    <Box
-                      key={p.id}
-                      onClick={() => selectPatient(p)}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1.5,
-                        p: 1.5,
-                        cursor: "pointer",
-                        "&:hover": { bgcolor: "action.hover" },
-                      }}
-                    >
-                      <Avatar sx={{ width: 32, height: 32, fontSize: 12, bgcolor: "action.selected", color: "primary.dark" }}>
-                        {getInitials(p.name)}
-                      </Avatar>
+                    <SuggestionRow key={p.id} onClick={() => selectPatient(p)}>
+                      <PatientAvatarSm>{getInitials(p.name)}</PatientAvatarSm>
                       <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          {p.name}
-                        </Typography>
+                        <MediumText variant="body2">{p.name}</MediumText>
                         <Typography variant="caption" color="text.secondary">
                           CPF {p.cpf}
                         </Typography>
                       </Box>
-                    </Box>
+                    </SuggestionRow>
                   ))}
                 </Stack>
-              </Paper>
+              </SuggestionsPaper>
             )}
             {query.trim() && filteredPatients.length === 0 && (
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              <NoResultsText variant="body2" color="text.secondary">
                 Nenhum paciente encontrado.
-              </Typography>
+              </NoResultsText>
             )}
-          </Box>
+          </SearchWrapper>
         )}
       </Box>
 
@@ -280,23 +277,23 @@ export default function AppointmentBooking({
           Médico
         </Typography>
         {doctors.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          <NoDoctorsText variant="body2" color="text.secondary">
             Nenhum médico cadastrado nesta clínica ainda.
-          </Typography>
+          </NoDoctorsText>
         ) : (
-          <Stack direction="row" spacing={1.25} sx={{ mt: 0.5, flexWrap: "wrap", rowGap: 1.25 }}>
+          <DoctorChipsRow direction="row" spacing={1.25}>
             {doctors.map((d) => (
               <Chip
                 key={d.id}
                 clickable
                 onClick={() => setDoctorId(d.id)}
-                avatar={<Avatar sx={{ fontSize: 11 }}>{getInitials(d.user.name)}</Avatar>}
+                avatar={<ChipAvatarSm>{getInitials(d.user.name)}</ChipAvatarSm>}
                 label={d.user.name}
                 color={doctorId === d.id ? "primary" : "default"}
                 variant={doctorId === d.id ? "filled" : "outlined"}
               />
             ))}
-          </Stack>
+          </DoctorChipsRow>
         )}
       </Box>
 
@@ -304,141 +301,77 @@ export default function AppointmentBooking({
         <Typography variant="overline" color="text.secondary">
           Data
         </Typography>
-        <Stack direction="row" spacing={1.25} sx={{ mt: 0.5, overflowX: "auto", pb: 0.5 }}>
+        <DaysRow direction="row" spacing={1.25}>
           {days.map((d) => (
-            <Box
-              key={d.dateStr}
-              onClick={() => setDateStr(d.dateStr)}
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 0.25,
-                width: 56,
-                height: 60,
-                flexShrink: 0,
-                borderRadius: 1,
-                border: 1.5,
-                borderColor: dateStr === d.dateStr ? "primary.main" : "divider",
-                bgcolor: dateStr === d.dateStr ? "primary.main" : "transparent",
-                color: dateStr === d.dateStr ? "primary.contrastText" : "text.primary",
-                cursor: "pointer",
-              }}
-            >
-              <Typography
-                variant="caption"
-                sx={{
-                  textTransform: "uppercase",
-                  color: dateStr === d.dateStr ? "primary.contrastText" : "text.secondary",
-                  opacity: dateStr === d.dateStr ? 0.85 : 1,
-                }}
-              >
+            <DayCell key={d.dateStr} onClick={() => setDateStr(d.dateStr)} selected={dateStr === d.dateStr}>
+              <DowLabel variant="caption" selected={dateStr === d.dateStr}>
                 {d.dow}
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                {d.dayNum}
-              </Typography>
-            </Box>
+              </DowLabel>
+              <MediumText variant="body2">{d.dayNum}</MediumText>
+            </DayCell>
           ))}
-        </Stack>
+        </DaysRow>
       </Box>
 
       <Box>
         <Typography variant="overline" color="text.secondary">
           Horário disponível
         </Typography>
-        <Box sx={{ mt: 0.5 }}>
+        <SlotsWrapper>
           {loadingSlots ? (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 1 }}>
+            <LoadingRow>
               <CircularProgress size={16} />
               <Typography variant="body2" color="text.secondary">
                 Carregando horários...
               </Typography>
-            </Box>
+            </LoadingRow>
           ) : slots.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
               Nenhum horário livre nessa data para o médico selecionado.
             </Typography>
           ) : (
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(88px, 1fr))",
-                gap: 1.25,
-              }}
-            >
+            <SlotsGrid>
               {slots.map((time) => {
                 const selected = selectedTime === time && !isWalkIn;
                 return (
-                  <Box
-                    key={time}
-                    onClick={() => selectSlot(time)}
-                    sx={{
-                      height: 40,
-                      borderRadius: 1,
-                      border: 1.5,
-                      borderColor: selected ? "primary.main" : "divider",
-                      bgcolor: selected ? "primary.main" : "transparent",
-                      color: selected ? "primary.contrastText" : "text.primary",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 13,
-                      fontWeight: 500,
-                      cursor: "pointer",
-                    }}
-                  >
+                  <SlotCell key={time} onClick={() => selectSlot(time)} selected={selected}>
                     {time}
-                  </Box>
+                  </SlotCell>
                 );
               })}
-            </Box>
+            </SlotsGrid>
           )}
-        </Box>
+        </SlotsWrapper>
 
-        <Stack direction="row" spacing={1} sx={{ mt: 2, alignItems: "center" }}>
-          <Box sx={{ flex: 1, borderBottom: 1, borderColor: "divider" }} />
+        <DividerRow direction="row" spacing={1}>
+          <DividerLine />
           <Typography variant="caption" color="text.secondary">
             fora do horário padrão
           </Typography>
-          <Box sx={{ flex: 1, borderBottom: 1, borderColor: "divider" }} />
-        </Stack>
+          <DividerLine />
+        </DividerRow>
 
-        <Stack direction="row" spacing={1.5} sx={{ mt: 1.5, alignItems: "center", flexWrap: "wrap" }}>
-          <TextField
+        <WalkInRow direction="row" spacing={1.5}>
+          <WalkInTimeField
             type="time"
             size="small"
             value={walkInTime}
             onChange={(e) => setWalkInTime(e.target.value)}
-            sx={{ width: 140 }}
           />
           <Button size="small" startIcon={<AddIcon />} onClick={addWalkIn} disabled={!walkInTime}>
             Adicionar encaixe
           </Button>
           {isWalkIn && selectedTime && (
-            <Stack direction="row" spacing={0.75} sx={{ alignItems: "center" }}>
+            <WalkInConfirmRow direction="row" spacing={0.75}>
               <StatusChip status="WALK_IN" />
               <Typography variant="body2">{selectedTime}</Typography>
               <CheckIcon fontSize="small" color="primary" />
-            </Stack>
+            </WalkInConfirmRow>
           )}
-        </Stack>
+        </WalkInRow>
       </Box>
 
-      <Box
-        sx={{
-          mt: "auto",
-          pt: 2.5,
-          borderTop: 1,
-          borderColor: "divider",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 1.5,
-        }}
-      >
+      <FooterBar>
         <Typography variant="body2" color="text.secondary">
           {selectedPatient && selectedDoctor && selectedTime && selectedDay ? (
             <>
@@ -459,7 +392,7 @@ export default function AppointmentBooking({
         >
           {saving ? "Agendando..." : "Confirmar Agendamento"}
         </Button>
-      </Box>
-    </Box>
+      </FooterBar>
+    </Root>
   );
 }

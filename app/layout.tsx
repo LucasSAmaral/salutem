@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Roboto, Manrope, IBM_Plex_Sans } from "next/font/google";
-import Providers from "@/components/Providers";
+import Providers from "@/components/Providers/Providers";
 import "./globals.css";
 
 const roboto = Roboto({ subsets: ["latin"], weight: ["300", "400", "500", "700"], variable: "--font-roboto" });

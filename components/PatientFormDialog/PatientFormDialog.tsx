@@ -5,10 +5,8 @@ import {
   Alert,
   Box,
   Button,
-  Checkbox,
   Dialog,
   DialogActions,
-  DialogContent,
   DialogTitle,
   TextField,
   Typography,
@@ -17,6 +15,13 @@ import type { Patient } from "@prisma/client";
 import { formatCPF } from "@/lib/cpf";
 import { formatPhone } from "@/lib/masks";
 import { toDateInputValue } from "@/lib/formatDate";
+import {
+  ConsentBox,
+  ConsentCheckbox,
+  ConsentTitle,
+  FieldRow,
+  FormDialogContent,
+} from "./PatientFormDialog.styles";
 
 type FormState = {
   name: string;
@@ -105,7 +110,7 @@ export default function PatientFormDialog({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>{editing ? "Editar paciente" : "Novo Paciente"}</DialogTitle>
-      <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
+      <FormDialogContent>
         <Typography variant="body2" color="text.secondary">
           Os dados abaixo ficam vinculados ao prontuário do paciente.
         </Typography>
@@ -115,7 +120,7 @@ export default function PatientFormDialog({
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
         />
-        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+        <FieldRow>
           <TextField
             label="CPF"
             value={form.cpf}
@@ -129,8 +134,8 @@ export default function PatientFormDialog({
             onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
             slotProps={{ inputLabel: { shrink: true } }}
           />
-        </Box>
-        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+        </FieldRow>
+        <FieldRow>
           <TextField
             label="Telefone"
             value={form.phone}
@@ -143,34 +148,23 @@ export default function PatientFormDialog({
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
-        </Box>
+        </FieldRow>
 
-        <Box
-          sx={{
-            bgcolor: "background.default",
-            border: 1,
-            borderColor: "divider",
-            borderRadius: 1,
-            p: 1.75,
-            display: "flex",
-            gap: 1.5,
-          }}
-        >
-          <Checkbox
+        <ConsentBox>
+          <ConsentCheckbox
             checked={form.consent}
             onChange={(e) => setForm({ ...form, consent: e.target.checked })}
-            sx={{ p: 0, mt: 0.25 }}
           />
           <Box>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            <ConsentTitle variant="body2">
               Paciente consentiu com o tratamento de dados (LGPD)
-            </Typography>
+            </ConsentTitle>
             <Typography variant="caption" color="text.secondary">
               Necessário para armazenar prontuário, exames e histórico de consultas.
             </Typography>
           </Box>
-        </Box>
-      </DialogContent>
+        </ConsentBox>
+      </FormDialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancelar</Button>
         <Button onClick={handleSave} variant="contained" disabled={saving}>

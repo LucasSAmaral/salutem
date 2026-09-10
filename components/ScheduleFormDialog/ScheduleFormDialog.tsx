@@ -7,7 +7,6 @@ import {
   Checkbox,
   Dialog,
   DialogActions,
-  DialogContent,
   DialogTitle,
   FormControlLabel,
   MenuItem,
@@ -15,6 +14,7 @@ import {
 } from "@mui/material";
 import type { DoctorSchedule } from "@prisma/client";
 import { DAY_LABELS } from "@/lib/dayLabels";
+import { FormDialogContent } from "./ScheduleFormDialog.styles";
 
 type FormState = {
   dayOfWeek: number;
@@ -103,9 +103,7 @@ export default function ScheduleFormDialog({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle>{editing ? "Editar turno" : "Novo turno"}</DialogTitle>
-      {/* "&&" força a especificidade: o MUI zera o padding-top do DialogContent
-       *  quando ele vem logo após um DialogTitle, e um sx normal perde pra essa regra. */}
-      <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, "&&": { pt: 2.5 } }}>
+      <FormDialogContent>
         {error && <Alert severity="error">{error}</Alert>}
         <TextField
           select
@@ -160,7 +158,7 @@ export default function ScheduleFormDialog({
             />
           </>
         )}
-      </DialogContent>
+      </FormDialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancelar</Button>
         <Button onClick={handleSave} variant="contained" disabled={saving}>

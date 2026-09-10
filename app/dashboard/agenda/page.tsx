@@ -4,10 +4,18 @@ import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { getCurrentDoctor } from "@/lib/currentDoctor";
 import { prisma } from "@/lib/prisma";
-import { Box, Typography, Paper, Stack } from "@mui/material";
-import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
-import ScheduleManager from "@/components/ScheduleManager";
+import { Box, Typography, Stack } from "@mui/material";
+import ScheduleManager from "@/components/ScheduleManager/ScheduleManager";
 import { getInitials } from "@/lib/initials";
+import {
+  BackLink,
+  BoldText,
+  ChevronIcon,
+  DoctorAvatar,
+  DoctorRow,
+  PageRoot,
+  Subtitle,
+} from "./page.styles";
 
 export default async function AgendaPage({
   searchParams,
@@ -30,16 +38,16 @@ export default async function AgendaPage({
     });
 
     return (
-      <Box sx={{ p: 4, maxWidth: 700 }}>
+      <PageRoot>
         <Typography variant="h5" gutterBottom>
           Minha Agenda
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        <Subtitle variant="body2" color="text.secondary">
           Os turnos abaixo definem o calendário de disponibilidade usado para
           agendamento de consultas.
-        </Typography>
+        </Subtitle>
         <ScheduleManager initialSchedules={schedules} />
-      </Box>
+      </PageRoot>
     );
   }
 
@@ -67,13 +75,13 @@ export default async function AgendaPage({
     });
 
     return (
-      <Box sx={{ p: 4, maxWidth: 700 }}>
+      <PageRoot>
         <Typography variant="h5" gutterBottom>
           Agenda dos Médicos
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        <Subtitle variant="body2" color="text.secondary">
           Selecione um médico para ver ou editar os turnos.
-        </Typography>
+        </Subtitle>
 
         {doctors.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
@@ -87,50 +95,23 @@ export default async function AgendaPage({
                 href={`/dashboard/agenda?doctorId=${d.id}`}
                 style={{ textDecoration: "none" }}
               >
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.75,
-                    p: 2,
-                    "&:hover": { borderColor: "primary.light" },
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: "50%",
-                      bgcolor: "action.selected",
-                      color: "primary.dark",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 15,
-                      fontWeight: 600,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {getInitials(d.user.name)}
-                  </Box>
+                <DoctorRow variant="outlined">
+                  <DoctorAvatar>{getInitials(d.user.name)}</DoctorAvatar>
                   <Box>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {d.user.name}
-                    </Typography>
+                    <BoldText variant="body2">{d.user.name}</BoldText>
                     {d.specialty && (
                       <Typography variant="body2" color="text.secondary">
                         {d.specialty}
                       </Typography>
                     )}
                   </Box>
-                  <ChevronRightOutlinedIcon sx={{ ml: "auto", color: "text.disabled" }} />
-                </Paper>
+                  <ChevronIcon />
+                </DoctorRow>
               </Link>
             ))}
           </Stack>
         )}
-      </Box>
+      </PageRoot>
     );
   }
 
@@ -140,21 +121,21 @@ export default async function AgendaPage({
   });
 
   return (
-    <Box sx={{ p: 4, maxWidth: 700 }}>
+    <PageRoot>
       <Link href="/dashboard/agenda" style={{ textDecoration: "none" }}>
-        <Typography variant="body2" color="primary" sx={{ mb: 1 }}>
+        <BackLink variant="body2" color="primary">
           ← Trocar de médico
-        </Typography>
+        </BackLink>
       </Link>
       <Typography variant="h5" gutterBottom>
         Agenda de {selectedDoctor.user.name}
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+      <Subtitle variant="body2" color="text.secondary">
         Os turnos abaixo definem o calendário de disponibilidade usado para
         agendamento de consultas.
-      </Typography>
+      </Subtitle>
 
       <ScheduleManager initialSchedules={schedules} doctorId={selectedDoctor.id} />
-    </Box>
+    </PageRoot>
   );
 }

@@ -2,8 +2,8 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Box } from "@mui/material";
-import PatientsManager from "@/components/PatientsManager";
+import PatientsManager from "@/components/PatientsManager/PatientsManager";
+import { PageRoot } from "./page.styles";
 
 export default async function PatientsPage() {
   const session = await getServerSession(authOptions);
@@ -18,8 +18,8 @@ export default async function PatientsPage() {
   });
 
   return (
-    <Box sx={{ p: 4 }}>
+    <PageRoot>
       <PatientsManager initialPatients={patients} />
-    </Box>
+    </PageRoot>
   );
 }

@@ -1,11 +1,11 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
-import { Box } from "@mui/material";
-import Sidebar from "@/components/Sidebar";
-import LogoutButton from "@/components/LogoutButton";
+import Sidebar from "@/components/Sidebar/Sidebar";
+import LogoutButton from "@/components/LogoutButton/LogoutButton";
 import { getNavItems } from "@/lib/navItems";
 import { getInitials } from "@/lib/initials";
+import { ContentArea, LayoutRoot, MainColumn, TopBar, UserAvatar } from "./layout.styles";
 
 export default async function DashboardLayout({
   children,
@@ -18,43 +18,15 @@ export default async function DashboardLayout({
   const items = getNavItems(session.user.role);
 
   return (
-    <Box sx={{ display: "flex", height: "100vh" }}>
+    <LayoutRoot>
       <Sidebar items={items} clinicSlug={session.user.clinicSlug} />
-      <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <Box
-          sx={{
-            height: 64,
-            flexShrink: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end",
-            gap: 1.5,
-            px: 4,
-            borderBottom: 1,
-            borderColor: "divider",
-            bgcolor: "background.paper",
-          }}
-        >
-          <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: "50%",
-              bgcolor: "primary.light",
-              color: "primary.contrastText",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 13,
-              fontWeight: 600,
-            }}
-          >
-            {getInitials(session.user.name)}
-          </Box>
+      <MainColumn>
+        <TopBar>
+          <UserAvatar>{getInitials(session.user.name)}</UserAvatar>
           <LogoutButton />
-        </Box>
-        <Box sx={{ flex: 1, overflowY: "auto" }}>{children}</Box>
-      </Box>
-    </Box>
+        </TopBar>
+        <ContentArea>{children}</ContentArea>
+      </MainColumn>
+    </LayoutRoot>
   );
 }

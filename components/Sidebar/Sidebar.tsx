@@ -11,6 +11,14 @@ import FormatListBulletedOutlinedIcon from "@mui/icons-material/FormatListBullet
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
 import type { NavItem, NavItemKey } from "@/lib/navItems";
+import {
+  BrandRow,
+  BrandText,
+  ClinicSlug,
+  LogoBadge,
+  NavRow,
+  SidebarRoot,
+} from "./Sidebar.styles";
 
 const ICONS: Record<NavItemKey, React.ElementType> = {
   dashboard: HomeOutlinedIcon,
@@ -26,39 +34,15 @@ export default function Sidebar({ items, clinicSlug }: { items: NavItem[]; clini
   const pathname = usePathname();
 
   return (
-    <Box
-      component="nav"
-      sx={{
-        width: 232,
-        flexShrink: 0,
-        bgcolor: "background.paper",
-        borderRight: 1,
-        borderColor: "divider",
-        display: "flex",
-        flexDirection: "column",
-        overflowY: "auto",
-        p: 1.5,
-      }}
-    >
-      <Stack direction="row" spacing={1.25} sx={{ alignItems: "center", px: 1.5, pt: 1, pb: 3 }}>
-        <Box
-          sx={{
-            width: 32,
-            height: 32,
-            borderRadius: 1,
-            bgcolor: "primary.main",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}
-        >
+    <SidebarRoot component="nav">
+      <BrandRow direction="row" spacing={1.25}>
+        <LogoBadge>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round">
             <path d="M12 3v18M3 12h18" />
           </svg>
-        </Box>
-        <Box sx={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.2px" }}>Salutem</Box>
-      </Stack>
+        </LogoBadge>
+        <BrandText>Salutem</BrandText>
+      </BrandRow>
 
       <Stack spacing={0.25}>
         {items.map((item) => {
@@ -66,25 +50,10 @@ export default function Sidebar({ items, clinicSlug }: { items: NavItem[]; clini
           const active = item.href != null && pathname === item.href;
 
           const row = (
-            <Stack
-              direction="row"
-              spacing={1.5}
-              sx={{
-                alignItems: "center",
-                px: 1.5,
-                py: 1,
-                borderRadius: 1,
-                fontSize: 14,
-                fontWeight: 500,
-                color: active ? "primary.dark" : item.href ? "text.secondary" : "text.disabled",
-                bgcolor: active ? "action.selected" : "transparent",
-                cursor: item.href ? "pointer" : "default",
-                "&:hover": item.href && !active ? { bgcolor: "action.hover" } : undefined,
-              }}
-            >
+            <NavRow direction="row" spacing={1.5} active={active} clickable={!!item.href}>
               <Icon fontSize="small" />
               <Box>{item.label}</Box>
-            </Stack>
+            </NavRow>
           );
 
           if (!item.href) {
@@ -103,9 +72,7 @@ export default function Sidebar({ items, clinicSlug }: { items: NavItem[]; clini
         })}
       </Stack>
 
-      <Box sx={{ mt: "auto", px: 1.5, py: 1.5, fontSize: 12, color: "text.secondary" }}>
-        {clinicSlug}
-      </Box>
-    </Box>
+      <ClinicSlug>{clinicSlug}</ClinicSlug>
+    </SidebarRoot>
   );
 }

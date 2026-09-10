@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth";
-import { Box, Paper, Typography, Chip, Tooltip } from "@mui/material";
+import { Box, Chip, Tooltip, Typography } from "@mui/material";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import EventAvailableOutlinedIcon from "@mui/icons-material/EventAvailableOutlined";
 import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
@@ -10,6 +10,17 @@ import FormatListBulletedOutlinedIcon from "@mui/icons-material/FormatListBullet
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
 import { getNavItems, type NavItemKey } from "@/lib/navItems";
+import {
+  AccessCard,
+  AccountCard,
+  BoldText,
+  CardIcon,
+  CardsGrid,
+  FieldLabel,
+  PageRoot,
+  SectionLabel,
+  Subtitle,
+} from "./page.styles";
 
 const CARD_META: Partial<Record<NavItemKey, { icon: React.ElementType; description: string }>> = {
   agenda: {
@@ -45,89 +56,54 @@ export default async function DashboardPage() {
   const quickAccess = getNavItems(session.user.role).filter((item) => item.key !== "dashboard");
 
   return (
-    <Box sx={{ p: 4 }}>
+    <PageRoot>
       <Typography variant="h5" gutterBottom>
         Bem-vindo, {session.user.name}
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+      <Subtitle variant="body2" color="text.secondary">
         Aqui está um resumo da sua conta.
-      </Typography>
+      </Subtitle>
 
-      <Paper variant="outlined" sx={{ p: 3, display: "flex", gap: 5, mb: 4, maxWidth: 700 }}>
+      <AccountCard variant="outlined">
         <Box>
-          <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+          <FieldLabel variant="caption" color="text.secondary">
             E-mail
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-            {session.user.email}
-          </Typography>
+          </FieldLabel>
+          <BoldText variant="body2">{session.user.email}</BoldText>
         </Box>
         <Box>
-          <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+          <FieldLabel variant="caption" color="text.secondary">
             Perfil
-          </Typography>
+          </FieldLabel>
           <Chip label={session.user.role} size="small" color="primary" variant="outlined" />
         </Box>
         <Box>
-          <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+          <FieldLabel variant="caption" color="text.secondary">
             Clínica
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-            {session.user.clinicSlug}
-          </Typography>
+          </FieldLabel>
+          <BoldText variant="body2">{session.user.clinicSlug}</BoldText>
         </Box>
-      </Paper>
+      </AccountCard>
 
-      <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, mb: 1.5 }}>
+      <SectionLabel variant="body2" color="text.secondary">
         Acesso rápido
-      </Typography>
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          gap: 2,
-          maxWidth: 900,
-        }}
-      >
+      </SectionLabel>
+      <CardsGrid>
         {quickAccess.map((item) => {
           const meta = CARD_META[item.key];
           if (!meta) return null;
           const Icon = meta.icon;
 
           const card = (
-            <Paper
-              variant="outlined"
-              sx={{
-                p: 2.5,
-                display: "flex",
-                flexDirection: "column",
-                gap: 1.5,
-                height: "100%",
-                opacity: item.href ? 1 : 0.55,
-                "&:hover": item.href ? { borderColor: "primary.light" } : undefined,
-              }}
-            >
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 1,
-                  bgcolor: "action.selected",
-                  color: "primary.dark",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
+            <AccessCard variant="outlined" clickable={!!item.href}>
+              <CardIcon>
                 <Icon fontSize="small" />
-              </Box>
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                {item.label}
-              </Typography>
+              </CardIcon>
+              <BoldText variant="body2">{item.label}</BoldText>
               <Typography variant="body2" color="text.secondary">
                 {meta.description}
               </Typography>
-            </Paper>
+            </AccessCard>
           );
 
           if (!item.href) {
@@ -144,7 +120,7 @@ export default async function DashboardPage() {
             </Link>
           );
         })}
-      </Box>
-    </Box>
+      </CardsGrid>
+    </PageRoot>
   );
 }
