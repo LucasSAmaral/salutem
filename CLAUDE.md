@@ -11,9 +11,9 @@ SaaS multi-tenant para clínicas médicas particulares. Cada clínica tem sua pr
 - **ORM:** Prisma v5.22.0
 - **Banco:** PostgreSQL (um banco por clínica)
 - **Autenticação:** NextAuth.js com JWT
-- **Tempo real:** Supabase Realtime ou Pusher (fila e agendamento)
-- **Storage:** AWS S3 (exames e arquivos)
-- **Infra:** Docker + AWS (ECS, RDS, S3, Route 53)
+- **Tempo real:** Supabase Realtime (fila e agendamento)
+- **Storage:** Supabase Storage (exames e arquivos)
+- **Infra:** Vercel (hosting do Next.js) + Supabase (Postgres gerenciado, região `sa-east-1`/São Paulo) — escolhido em vez de AWS (ECS/RDS/S3) pelo custo menor e setup mais simples pra validar o produto com os primeiros clientes; caminho de migração pra AWS fica aberto se a escala justificar no futuro (arquitetura multi-tenant já é a mesma independente do provedor)
 
 ## Perfis de Usuário
 
