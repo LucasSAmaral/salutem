@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Button, Tooltip, Typography } from "@mui/material";
-import type { QueueEntry, QueueSnapshot } from "@/lib/queue";
+import type { ExpectedArrival, QueueEntry, QueueSnapshot } from "@/lib/queue";
 import { supabaseBrowserClient, QUEUE_CHANGED_EVENT } from "@/lib/supabase";
 import StatusChip from "@/components/StatusChip/StatusChip";
+import ExpectedArrivals, { arrivalBusyKey } from "@/components/ExpectedArrivals/ExpectedArrivals";
 import {
   DoneIcon,
   EmptyState,
@@ -71,37 +72,55 @@ async function fetchQueue(): Promise<QueueSnapshot | null> {
   }
 }
 
-/** Manda a ação pro servidor e devolve o que mostrar ao usuário. Nunca lança. */
-async function requestAction(entryId: number, action: QueueAction): Promise<Feedback> {
+type ServerReply = { error?: string; next?: { patientName?: string } };
+
+/** Faz uma chamada ao servidor e devolve o que mostrar ao usuário. Nunca lança. */
+async function submit(
+  request: () => Promise<Response>,
+  noticeFrom: (reply: ServerReply) => string | null
+): Promise<Feedback> {
   try {
-    const res = await fetch(`/api/queue/${entryId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) return { error: data.error ?? ACTION_ERROR, notice: null };
-    return {
-      error: null,
-      notice: data.next?.patientName ? `Próximo paciente chamado: ${data.next.patientName}` : null,
-    };
+    const res = await request();
+    const reply: ServerReply = await res.json().catch(() => ({}));
+    return res.ok
+      ? { error: null, notice: noticeFrom(reply) }
+      : { error: reply.error ?? ACTION_ERROR, notice: null };
   } catch {
     return { error: ACTION_ERROR, notice: null };
   }
 }
 
+const sendJson = (url: string, method: string, body: unknown): Promise<Response> =>
+  fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+
+const requestAction = (entryId: number, action: QueueAction): Promise<Feedback> =>
+  submit(
+    () => sendJson(`/api/queue/${entryId}`, "PATCH", { action }),
+    (reply) =>
+      reply.next?.patientName ? `Próximo paciente chamado: ${reply.next.patientName}` : null
+  );
+
+const requestArrival = (arrival: ExpectedArrival): Promise<Feedback> =>
+  submit(
+    () => sendJson("/api/queue", "POST", { appointmentId: arrival.appointmentId }),
+    () => `Chegada confirmada: ${arrival.patient.name}`
+  );
+
 export default function QueueBoard({
   initialSnapshot,
   channelName,
   canManage,
+  canConfirmArrival,
 }: {
   initialSnapshot: QueueSnapshot;
   channelName: string;
   /** Só o médico chama, finaliza e pula; a atendente apenas acompanha. */
   canManage: boolean;
+  /** A atendente confirma a chegada dos pacientes esperados. */
+  canConfirmArrival: boolean;
 }) {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
-  const [busyId, setBusyId] = useState<number | null>(null);
+  const [busyKey, setBusyKey] = useState<string | null>(null);
   const [feedback, setFeedback] = useState(NO_FEEDBACK);
 
   const refresh = useCallback(async (): Promise<void> => {
@@ -126,23 +145,22 @@ export default function QueueBoard({
     };
   }, [channelName, refresh]);
 
-  async function act(entry: QueueEntry, action: QueueAction): Promise<void> {
-    setBusyId(entry.id);
+  async function run(key: string, request: () => Promise<Feedback>): Promise<void> {
+    setBusyKey(key);
     setFeedback(NO_FEEDBACK);
-    const outcome = await requestAction(entry.id, action);
+    const outcome = await request();
     // Aviso e lista mudam juntos, e a linha só é liberada depois de a fila
     // atualizar: até lá ela mostra o estado antigo e um segundo clique agiria
     // sobre um paciente que já mudou.
     await refresh();
     setFeedback(outcome);
-    setBusyId(null);
+    setBusyKey(null);
   }
+
+  const act = (entry: QueueEntry, action: QueueAction): Promise<void> =>
+    run(`queue-${entry.id}`, () => requestAction(entry.id, action));
 
   const groups = groupByDoctor(snapshot.entries);
-
-  if (groups.length === 0) {
-    return <EmptyState color="text.secondary">Nenhum paciente na fila hoje.</EmptyState>;
-  }
 
   return (
     <>
@@ -157,6 +175,10 @@ export default function QueueBoard({
         </QueueAlert>
       )}
 
+      {groups.length === 0 && (
+        <EmptyState color="text.secondary">Nenhum paciente na fila hoje.</EmptyState>
+      )}
+
       {groups.map((group) => {
         const someoneInProgress = group.active.some((e) => e.status === "EM_ATENDIMENTO");
         const someoneWaiting = group.active.some((e) => e.status === "AGUARDANDO");
@@ -167,7 +189,7 @@ export default function QueueBoard({
 
             {group.active.map((entry, index) => {
               const inProgress = entry.status === "EM_ATENDIMENTO";
-              const busy = busyId === entry.id;
+              const busy = busyKey === `queue-${entry.id}`;
 
               return (
                 <QueueRow key={entry.id} highlighted={inProgress}>
@@ -274,6 +296,16 @@ export default function QueueBoard({
           </GroupSection>
         );
       })}
+
+      {canConfirmArrival && (
+        <ExpectedArrivals
+          arrivals={snapshot.expected}
+          busyKey={busyKey}
+          onConfirm={(arrival) =>
+            run(arrivalBusyKey(arrival), () => requestArrival(arrival))
+          }
+        />
+      )}
     </>
   );
 }

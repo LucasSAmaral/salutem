@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getCurrentDoctor } from "@/lib/currentDoctor";
 import { dayRange, todayInClinic } from "@/lib/clinicTime";
-import { getQueue } from "@/lib/queue";
+import { getQueueSnapshot } from "@/lib/queue";
 import { notifyQueueChanged } from "@/lib/queueRealtime";
 
 const VIEW_ROLES = ["DOCTOR", "ATTENDANT"];
@@ -28,9 +28,11 @@ export async function GET(req: NextRequest) {
   const doctorId = doctor?.id ?? requestedDoctorId;
 
   const date = todayInClinic();
-  const asOf = new Date().toISOString();
-  const entries = await getQueue(session.user.clinicId, date, doctorId);
-  return NextResponse.json({ date, asOf, entries });
+  const snapshot = await getQueueSnapshot(session.user.clinicId, date, {
+    doctorId,
+    withExpected: session.user.role === "ATTENDANT",
+  });
+  return NextResponse.json({ date, ...snapshot });
 }
 
 /** Confirma a chegada do paciente: consulta SCHEDULED → CONFIRMED e entra no

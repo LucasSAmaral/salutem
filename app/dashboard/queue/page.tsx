@@ -4,7 +4,7 @@ import { Typography } from "@mui/material";
 import { authOptions } from "@/lib/auth";
 import { getCurrentDoctor } from "@/lib/currentDoctor";
 import { todayInClinic, todayLabelInClinic } from "@/lib/clinicTime";
-import { getQueue } from "@/lib/queue";
+import { getQueueSnapshot } from "@/lib/queue";
 import { queueChannelName } from "@/lib/queueRealtime";
 import QueueBoard from "@/components/QueueBoard/QueueBoard";
 import { PageRoot, Subtitle } from "./page.styles";
@@ -20,8 +20,10 @@ export default async function QueuePage() {
   const doctor = isDoctor ? await getCurrentDoctor(session) : null;
   if (isDoctor && !doctor) redirect("/dashboard");
 
-  const asOf = new Date().toISOString();
-  const entries = await getQueue(session.user.clinicId, todayInClinic(), doctor?.id);
+  const snapshot = await getQueueSnapshot(session.user.clinicId, todayInClinic(), {
+    doctorId: doctor?.id,
+    withExpected: !isDoctor,
+  });
   const who = isDoctor ? session.user.name : "Todos os médicos";
 
   return (
@@ -34,9 +36,10 @@ export default async function QueuePage() {
       </Subtitle>
 
       <QueueBoard
-        initialSnapshot={{ asOf, entries }}
+        initialSnapshot={snapshot}
         channelName={queueChannelName(session.user.clinicId)}
         canManage={isDoctor}
+        canConfirmArrival={!isDoctor}
       />
     </PageRoot>
   );

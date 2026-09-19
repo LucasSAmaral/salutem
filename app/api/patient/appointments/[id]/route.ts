@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getPatientSession } from "@/lib/patientAuth";
+import { notifyQueueChanged } from "@/lib/queueRealtime";
 
 /** Paciente só pode cancelar a própria consulta, e só enquanto ela ainda
  *  está SCHEDULED — depois que a recepção confirma a chegada ou o
@@ -30,17 +31,22 @@ export async function PATCH(
     return NextResponse.json({ error: "Consulta não encontrada" }, { status: 404 });
   }
 
-  if (appointment.status !== "SCHEDULED") {
-    return NextResponse.json(
+  const cancelledByPatient = () =>
+    NextResponse.json(
       { error: "Essa consulta não pode mais ser cancelada por aqui. Ligue pra clínica." },
       { status: 409 }
     );
-  }
 
-  const updated = await prisma.appointment.update({
-    where: { id },
+  if (appointment.status !== "SCHEDULED") return cancelledByPatient();
+
+  // Condicionado ao status: se a recepção confirmou a chegada no meio tempo,
+  // o cancelamento não pode sobrescrever a consulta que já entrou na fila.
+  const cancelled = await prisma.appointment.updateMany({
+    where: { id, patientId: session.patientId, clinicId: session.clinicId, status: "SCHEDULED" },
     data: { status: "CANCELLED" },
   });
+  if (cancelled.count === 0) return cancelledByPatient();
 
-  return NextResponse.json(updated);
+  await notifyQueueChanged(session.clinicId);
+  return NextResponse.json({ ...appointment, status: "CANCELLED" });
 }

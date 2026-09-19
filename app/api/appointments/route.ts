@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { notifyQueueChanged } from "@/lib/queueRealtime";
 import { combineDateAndTime, getAvailableSlots, isSlotTaken } from "@/lib/availability";
 
 const ALLOWED_ROLES = ["ADMIN", "ATTENDANT"];
@@ -58,5 +59,6 @@ export async function POST(req: NextRequest) {
     include: { patient: true, doctor: { include: { user: true } } },
   });
 
+  await notifyQueueChanged(session.user.clinicId);
   return NextResponse.json(appointment, { status: 201 });
 }

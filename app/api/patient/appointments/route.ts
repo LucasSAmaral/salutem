@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { combineDateAndTime, getAvailableSlots } from "@/lib/availability";
 import { getPatientSession } from "@/lib/patientAuth";
+import { notifyQueueChanged } from "@/lib/queueRealtime";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -54,5 +55,6 @@ export async function POST(req: NextRequest) {
     include: { doctor: { include: { user: true } } },
   });
 
+  await notifyQueueChanged(session.clinicId);
   return NextResponse.json(appointment, { status: 201 });
 }

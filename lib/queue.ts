@@ -24,9 +24,23 @@ export type QueueEntry = {
   isLastPresent: boolean;
 };
 
+/** Consulta de hoje que ainda não teve a chegada confirmada (status SCHEDULED). */
+export type ExpectedArrival = {
+  appointmentId: number;
+  scheduledTime: string;
+  isWalkIn: boolean;
+  patient: { id: number; name: string };
+  doctor: { id: number; name: string };
+};
+
 /** A fila num instante. `asOf` deixa o client descartar uma resposta velha que
  *  chega depois de uma mais nova, sem precisar de estado mutável. */
-export type QueueSnapshot = { asOf: string; entries: QueueEntry[] };
+export type QueueSnapshot = {
+  asOf: string;
+  entries: QueueEntry[];
+  /** Só vem preenchido pra quem confirma chegada (atendente). */
+  expected: ExpectedArrival[];
+};
 
 const STATUS_MAP: Partial<Record<AppointmentStatus, QueueStatus>> = {
   CONFIRMED: "AGUARDANDO",
@@ -98,4 +112,52 @@ export async function getQueue(
       },
     ];
   });
+}
+
+/** Consultas do dia ainda aguardando a chegada do paciente, por horário.
+ *  Sempre escopada por `clinicId`. */
+export async function getExpectedArrivals(
+  clinicId: number,
+  dateStr: string,
+  doctorId?: number
+): Promise<ExpectedArrival[]> {
+  const { start, end } = dayRange(dateStr);
+
+  const appointments = await prisma.appointment.findMany({
+    where: {
+      clinicId,
+      status: "SCHEDULED",
+      date: { gte: start, lte: end },
+      ...(doctorId ? { doctorId } : {}),
+    },
+    include: {
+      patient: { select: { id: true, name: true } },
+      doctor: { include: { user: { select: { name: true } } } },
+    },
+    orderBy: [{ date: "asc" }, { id: "asc" }],
+  });
+
+  return appointments.map((appointment) => ({
+    appointmentId: appointment.id,
+    scheduledTime: extractTime(appointment.date),
+    isWalkIn: appointment.isWalkIn,
+    patient: appointment.patient,
+    doctor: { id: appointment.doctorId, name: appointment.doctor.user.name },
+  }));
+}
+
+/** Fila + chegadas esperadas de uma vez, com o instante da leitura. O `asOf` é
+ *  tirado antes das consultas: no pior caso o snapshot parece um pouco mais
+ *  velho do que é, nunca mais novo. */
+export async function getQueueSnapshot(
+  clinicId: number,
+  dateStr: string,
+  options: { doctorId?: number; withExpected: boolean }
+): Promise<QueueSnapshot> {
+  const asOf = new Date().toISOString();
+  const [entries, expected] = await Promise.all([
+    getQueue(clinicId, dateStr, options.doctorId),
+    options.withExpected ? getExpectedArrivals(clinicId, dateStr, options.doctorId) : [],
+  ]);
+  return { asOf, entries, expected };
 }
