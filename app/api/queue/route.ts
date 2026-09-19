@@ -19,19 +19,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
-  let doctorId: number | undefined;
-  if (session.user.role === "DOCTOR") {
-    const doctor = await getCurrentDoctor(session);
-    if (!doctor) return NextResponse.json({ error: "Médico não encontrado" }, { status: 404 });
-    doctorId = doctor.id;
-  } else {
-    const requested = Number(req.nextUrl.searchParams.get("doctorId"));
-    if (requested) doctorId = requested;
+  const isDoctor = session.user.role === "DOCTOR";
+  const doctor = isDoctor ? await getCurrentDoctor(session) : null;
+  if (isDoctor && !doctor) {
+    return NextResponse.json({ error: "Médico não encontrado" }, { status: 404 });
   }
+  const requestedDoctorId = Number(req.nextUrl.searchParams.get("doctorId")) || undefined;
+  const doctorId = doctor?.id ?? requestedDoctorId;
 
   const date = todayInClinic();
+  const asOf = new Date().toISOString();
   const entries = await getQueue(session.user.clinicId, date, doctorId);
-  return NextResponse.json({ date, entries });
+  return NextResponse.json({ date, asOf, entries });
 }
 
 /** Confirma a chegada do paciente: consulta SCHEDULED → CONFIRMED e entra no

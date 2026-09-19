@@ -24,6 +24,10 @@ export type QueueEntry = {
   isLastPresent: boolean;
 };
 
+/** A fila num instante. `asOf` deixa o client descartar uma resposta velha que
+ *  chega depois de uma mais nova, sem precisar de estado mutável. */
+export type QueueSnapshot = { asOf: string; entries: QueueEntry[] };
+
 const STATUS_MAP: Partial<Record<AppointmentStatus, QueueStatus>> = {
   CONFIRMED: "AGUARDANDO",
   IN_PROGRESS: "EM_ATENDIMENTO",
@@ -65,18 +69,17 @@ export async function getQueue(
 
   const lastScheduledByDoctor = new Map(lastScheduled.map((g) => [g.doctorId, g._max.date?.getTime()]));
 
-  // Itens já ordenados por médico e posição: o último "pendente" de cada médico vence.
-  const lastPresentIdByDoctor = new Map<number, number>();
-  for (const item of items) {
-    const status = STATUS_MAP[item.appointment.status];
-    if (status === "AGUARDANDO" || status === "EM_ATENDIMENTO") {
-      lastPresentIdByDoctor.set(item.appointment.doctorId, item.id);
-    }
-  }
+  const statusOf = (item: (typeof items)[number]): QueueStatus | undefined =>
+    STATUS_MAP[item.appointment.status];
+  const isPending = (item: (typeof items)[number]): boolean =>
+    statusOf(item) === "AGUARDANDO" || statusOf(item) === "EM_ATENDIMENTO";
+  // `items` já vem ordenado por médico e posição: o último pendente é o último presente.
+  const lastPendingId = (id: number): number | undefined =>
+    items.filter((item) => item.appointment.doctorId === id && isPending(item)).at(-1)?.id;
 
   return items.flatMap((item): QueueEntry[] => {
     const { appointment } = item;
-    const status = STATUS_MAP[appointment.status];
+    const status = statusOf(item);
     if (!status) return []; // ex.: consulta cancelada depois de entrar na fila
 
     return [
@@ -91,7 +94,7 @@ export async function getQueue(
         patient: appointment.patient,
         doctor: { id: appointment.doctorId, name: appointment.doctor.user.name },
         isLastScheduled: lastScheduledByDoctor.get(appointment.doctorId) === appointment.date.getTime(),
-        isLastPresent: lastPresentIdByDoctor.get(appointment.doctorId) === item.id,
+        isLastPresent: lastPendingId(appointment.doctorId) === item.id,
       },
     ];
   });

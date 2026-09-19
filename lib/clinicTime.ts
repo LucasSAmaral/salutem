@@ -13,6 +13,17 @@ export function todayInClinic(now: Date = new Date()): string {
   }).format(now);
 }
 
+/** "hoje, 19 de setembro" — pra cabeçalhos. Calculado no servidor: o fuso do
+ *  navegador pode diferir do da clínica e causar divergência de hidratação. */
+export function todayLabelInClinic(now: Date = new Date()): string {
+  const label = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: CLINIC_TIMEZONE,
+    day: "numeric",
+    month: "long",
+  }).format(now);
+  return `hoje, ${label}`;
+}
+
 /** Intervalo [início, fim] do dia na convenção "hora de parede tratada como UTC"
  *  usada em `Appointment.date` (ver `combineDateAndTime` em lib/availability.ts). */
 export function dayRange(dateStr: string): { start: Date; end: Date } {
