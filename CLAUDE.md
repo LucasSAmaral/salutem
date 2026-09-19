@@ -85,6 +85,7 @@ Enums: Role (ADMIN, DOCTOR, ATTENDANT), AppointmentStatus (SCHEDULED, CONFIRMED,
 - Arquivos de página: page.tsx
 - Arquivos de componente: NomeComponente.tsx
 - Sempre tipar retornos de funções assíncronas
+- Seguir o paradigma funcional: só `const` (evitar `let`), não mutar dados (nada de `push`, `sort` no lugar, `Map.set`, reatribuição — usar `map`/`filter`/`reduce`/`toSorted`/spread), preferir expressões e funções pequenas e puras a laços `for`, e isolar efeitos colaterais (fetch, banco, estado do React) nas bordas
 - Usar Server Components por padrão, Client Components apenas quando necessário (interatividade, hooks)
 - Rotas de API em app/api/
 
