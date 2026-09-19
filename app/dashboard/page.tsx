@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth";
-import { Box, Chip, Tooltip, Typography } from "@mui/material";
+import { Box, Chip, Typography } from "@mui/material";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import EventAvailableOutlinedIcon from "@mui/icons-material/EventAvailableOutlined";
 import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
@@ -10,6 +10,7 @@ import FormatListBulletedOutlinedIcon from "@mui/icons-material/FormatListBullet
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
 import { getNavItems, type NavItemKey } from "@/lib/navItems";
+import ComingSoonTooltip from "@/components/ComingSoonTooltip/ComingSoonTooltip";
 import {
   AccessCard,
   AccountCard,
@@ -107,11 +108,7 @@ export default async function DashboardPage() {
           );
 
           if (!item.href) {
-            return (
-              <Tooltip key={item.key} title="Em breve">
-                <Box>{card}</Box>
-              </Tooltip>
-            );
+            return <ComingSoonTooltip key={item.key}>{card}</ComingSoonTooltip>;
           }
 
           return (
