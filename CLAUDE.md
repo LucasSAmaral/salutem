@@ -19,7 +19,7 @@ SaaS multi-tenant para clínicas médicas particulares. Cada clínica tem sua pr
 
 - **ADMIN:** secretária/gestão da clínica — gerencia a agenda dos médicos (turnos, horário de funcionamento) e pagamento/cobrança. **Não acessa prontuário do paciente** — histórico clínico é exclusivo do DOCTOR.
 - **DOCTOR:** acessa prontuários, visualiza e gerencia fila em tempo real, configura própria agenda (ADMIN também pode configurar em nome dele)
-- **ATTENDANT:** agenda consultas, confirma chegada de pacientes, gerencia fila
+- **ATTENDANT:** agenda consultas, confirma chegada de pacientes, acompanha a fila (só leitura — não chama nem finaliza atendimento)
 - **PATIENT:** realiza autoagendamento online
 
 ## Funcionalidades Principais
@@ -36,6 +36,9 @@ SaaS multi-tenant para clínicas médicas particulares. Cada clínica tem sua pr
 
 - Atendente confirma chegada e adiciona paciente à fila
 - Médico visualiza fila atualizada em tempo real
+- Só o médico chama e finaliza atendimento (é ele quem sabe quando a consulta começa e termina), e só nos próprios pacientes
+- Ao finalizar um atendimento, o sistema já chama o próximo da fila (por ordem de chegada); "Chamar" manual fica pro primeiro do dia ou pra fila que estava vazia
+- Paciente chamado que não estava na sala (foi almoçar, etc.) é "pulado": perde a vez uma única vez — o próximo é chamado no lugar e ele volta a aguardar logo atrás dele, não vai pro fim da fila. Se estiver ausente de novo, pula de novo
 - Status: AGUARDANDO → EM_ATENDIMENTO → ATENDIDO
 - Indicador visual de último paciente do dia (último agendado e último presente podem ser diferentes)
 - Encaixes sinalizados visualmente na fila
