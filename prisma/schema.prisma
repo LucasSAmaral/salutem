@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
@@ -17,11 +17,13 @@ model Clinic {
   address   String?
   createdAt DateTime @default(now())
 
-  users        User[]
-  doctors      Doctor[]
-  patients     Patient[]
-  appointments Appointment[]
-  queueItems   QueueItem[]
+  users          User[]
+  doctors        Doctor[]
+  patients       Patient[]
+  appointments   Appointment[]
+  queueItems     QueueItem[]
+  exams          Exam[]
+  recordAccesses RecordAccess[]
 }
 
 // ─── USUÁRIO (autenticação) ──────────────────────────────────────
@@ -50,10 +52,10 @@ enum Role {
 
 // ─── MÉDICO ──────────────────────────────────────────────────────
 model Doctor {
-  id             Int     @id @default(autoincrement())
-  crm            String
-  specialty      String?
-  consultDuration Int    @default(30) // minutos
+  id              Int     @id @default(autoincrement())
+  crm             String
+  specialty       String?
+  consultDuration Int     @default(30) // minutos
 
   user   User @relation(fields: [userId], references: [id])
   userId Int  @unique
@@ -61,17 +63,19 @@ model Doctor {
   clinic   Clinic @relation(fields: [clinicId], references: [id])
   clinicId Int
 
-  schedules    DoctorSchedule[]
-  appointments Appointment[]
-  absences     DoctorAbsence[]
+  schedules      DoctorSchedule[]
+  appointments   Appointment[]
+  absences       DoctorAbsence[]
+  recordAccesses RecordAccess[]
+  uploadedExams  Exam[]
 }
 
 // ─── AGENDA DO MÉDICO ────────────────────────────────────────────
 model DoctorSchedule {
-  id        Int      @id @default(autoincrement())
-  dayOfWeek Int      // 0=domingo, 1=segunda... 6=sábado
-  startTime String   // "08:00"
-  endTime   String   // "12:00"
+  id         Int     @id @default(autoincrement())
+  dayOfWeek  Int // 0=domingo, 1=segunda... 6=sábado
+  startTime  String // "08:00"
+  endTime    String // "12:00"
   breakStart String? // "10:00"
   breakEnd   String? // "10:15"
 
@@ -92,20 +96,21 @@ model DoctorAbsence {
 
 // ─── PACIENTE ────────────────────────────────────────────────────
 model Patient {
-  id          Int      @id @default(autoincrement())
-  name        String
-  cpf         String
-  birthDate   DateTime
-  phone       String?
-  email       String?
-  consent     Boolean  @default(false) // LGPD
-  createdAt   DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  name      String
+  cpf       String
+  birthDate DateTime
+  phone     String?
+  email     String?
+  consent   Boolean  @default(false) // LGPD
+  createdAt DateTime @default(now())
 
   clinic   Clinic @relation(fields: [clinicId], references: [id])
   clinicId Int
 
-  appointments Appointment[]
-  exams        Exam[]
+  appointments   Appointment[]
+  exams          Exam[]
+  recordAccesses RecordAccess[]
 
   @@unique([cpf, clinicId])
 }
@@ -133,7 +138,7 @@ model Appointment {
 
 enum AppointmentStatus {
   SCHEDULED
-  CONFIRMED  // chegada confirmada
+  CONFIRMED // chegada confirmada
   IN_PROGRESS
   DONE
   CANCELLED
@@ -155,14 +160,41 @@ model QueueItem {
 
 // ─── EXAMES ──────────────────────────────────────────────────────
 model Exam {
-  id          Int      @id @default(autoincrement())
-  name        String
-  fileUrl     String   // URL do arquivo no S3
-  fileType    String   // "pdf", "image"
-  uploadedAt  DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  name       String
+  filePath   String // caminho no bucket privado do Supabase Storage (não é URL pública)
+  fileType   String // "pdf" | "image"
+  uploadedAt DateTime @default(now())
 
   patient   Patient @relation(fields: [patientId], references: [id])
   patientId Int
+
+  // Duplicado a partir de patient.clinicId, como em Appointment/QueueItem — toda
+  // query de dado de clínica filtra por clinicId (ver CLAUDE.md).
+  clinic   Clinic @relation(fields: [clinicId], references: [id])
+  clinicId Int
+
+  uploadedBy   Doctor @relation(fields: [uploadedById], references: [id])
+  uploadedById Int
+}
+
+// ─── LOG DE ACESSO AO PRONTUÁRIO (LGPD) ──────────────────────────
+// Uma linha por abertura de prontuário. Acesso é aberto a qualquer DOCTOR da
+// clínica (médicos cobrem uns aos outros, atuam em conjunto em casos
+// multidisciplinares) — esse log é o mecanismo de rastreabilidade, não uma
+// restrição de acesso.
+model RecordAccess {
+  id         Int      @id @default(autoincrement())
+  accessedAt DateTime @default(now())
+
+  patient   Patient @relation(fields: [patientId], references: [id])
+  patientId Int
+
+  doctor   Doctor @relation(fields: [doctorId], references: [id])
+  doctorId Int
+
+  clinic   Clinic @relation(fields: [clinicId], references: [id])
+  clinicId Int
 }
 
 // ─── NEXTAUTH ────────────────────────────────────────────────────
