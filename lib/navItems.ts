@@ -40,7 +40,7 @@ export function getNavItems(role: Role): NavItem[] {
   }
 
   if (role === "DOCTOR") {
-    items.push({ key: "records", label: "Prontuário", href: null });
+    items.push({ key: "records", label: "Prontuário", href: "/dashboard/records" });
   }
 
   if (role === "ADMIN") {

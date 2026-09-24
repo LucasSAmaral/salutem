@@ -47,7 +47,12 @@ export default function Sidebar({ items, clinicSlug }: { items: NavItem[]; clini
       <Stack spacing={0.25}>
         {items.map((item) => {
           const Icon = ICONS[item.key];
-          const active = item.href != null && pathname === item.href;
+          // "/dashboard" não conta como prefixo dos outros itens — senão eles
+          // ficariam ativos junto com o Dashboard em qualquer rota aninhada.
+          const active =
+            item.href != null &&
+            (pathname === item.href ||
+              (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`)));
 
           const row = (
             <NavRow direction="row" spacing={1.5} active={active} clickable={!!item.href}>
